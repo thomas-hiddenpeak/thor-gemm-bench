@@ -225,7 +225,7 @@ def plot_heatmap(
     cbar.set_label("TFLOPS", fontsize=9)
 
     plt.tight_layout()
-    os.makedirs(os.path.dirname(output) or ".", exist=".")
+    os.makedirs(os.path.dirname(output) or ".", exist_ok=True)
     fig.savefig(output, dpi=150)
     print(f"  Saved: {output}")
     plt.close(fig)

@@ -47,7 +47,7 @@
 
     Usage:
 
-      $ ./examples/72_blackwell_narrow_precision_gemm/72b_blackwell_nvfp4_nvfp4_gemm --m=2048 --n=2048 --k=2048
+      $ ./bench_nvfp4_fp4 --m=2048 --n=2048 --k=2048
 */
 
 #include <iostream>
@@ -312,7 +312,7 @@ struct Options {
   /// Prints the usage statement.
   std::ostream & print_usage(std::ostream &out) const {
 
-    out << "72b_blackwell_nvfp4_nvfp4_gemm\n\n"
+    out << "bench_nvfp4_fp4\n\n"
       << "  Blackwell NVFP4 GEMM using a Warp Specialized kernel.\n\n"
       << "Options:\n\n"
       << "  --help                      If specified, displays this usage statement\n"
@@ -328,7 +328,7 @@ struct Options {
       << "  --json                      Output results as JSON\n\n";
 
     out << "\n\nExamples:\n\n"
-      << "$ " << "./examples/72_blackwell_narrow_precision_gemm/72b_blackwell_nvfp4_nvfp4_gemm" << " --m=1024 --n=512 --k=1024 --alpha=2 --beta=0.707 \n\n";
+      << "$ " << "./bench_nvfp4_fp4" << " --m=1024 --n=512 --k=1024 --alpha=2 --beta=0.707 \n\n";
 
     return out;
   }

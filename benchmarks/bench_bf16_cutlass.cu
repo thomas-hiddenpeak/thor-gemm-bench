@@ -352,6 +352,8 @@ struct Result
   double max_runtime_ms;
   double median_runtime_ms;
   double stddev_ms;
+  double ci95_ms;    // 95% confidence interval half-width
+  double cv_pct;     // coefficient of variation (%)
   double gflops;
   cutlass::Status status;
   cudaError_t error;
@@ -359,12 +361,14 @@ struct Result
 
   Result(
     double avg_ = 0, double min_ = 0, double max_ = 0,
-    double median_ = 0, double std_ = 0, double gflops_ = 0,
+    double median_ = 0, double std_ = 0, double ci95_ = 0, double cv_ = 0,
+    double gflops_ = 0,
     cutlass::Status status_ = cutlass::Status::kSuccess,
     cudaError_t error_ = cudaSuccess)
   :
     avg_runtime_ms(avg_), min_runtime_ms(min_), max_runtime_ms(max_),
-    median_runtime_ms(median_), stddev_ms(std_), gflops(gflops_),
+    median_runtime_ms(median_), stddev_ms(std_),
+    ci95_ms(ci95_), cv_pct(cv_), gflops(gflops_),
     status(status_), error(error_), passed(false)
   {}
 
@@ -468,10 +472,14 @@ bool verify(const Options &options) {
   return passed;
 }
 
-/// Per-iteration timing statistics
+/// Per-iteration timing statistics with 95% confidence interval and coefficient of variation
 struct TimingStats {
   double min_ms, max_ms, mean_ms, median_ms, stddev_ms;
+  double sem_ms;    // standard error of the mean
+  double ci95_ms;   // 95% confidence interval half-width (1.96 * SEM for large n)
+  double cv_pct;    // coefficient of variation (stddev/mean * 100)
   int count;
+  int trimmed;      // number of trimmed outlier iterations
 
   static TimingStats from(const std::vector<double> &times, bool trim = true) {
     TimingStats s{};
@@ -489,12 +497,19 @@ struct TimingStats {
     int hi = (trim && n >= 10) ? n - lo : n;
     int t  = hi - lo;
     if (t <= 0) { t = n; lo = 0; hi = n; }
+    s.trimmed = n - t;
     double sum = 0;
     for (int i = lo; i < hi; ++i) sum += sorted[i];
     s.mean_ms = sum / t;
     double sq = 0;
     for (int i = lo; i < hi; ++i) sq += (sorted[i] - s.mean_ms) * (sorted[i] - s.mean_ms);
     s.stddev_ms = std::sqrt(sq / t);
+    // Standard error of the mean
+    s.sem_ms = (t > 1) ? s.stddev_ms / std::sqrt(static_cast<double>(t)) : 0.0;
+    // 95% CI half-width (z=1.96 for large n; acceptable for n >= 30)
+    s.ci95_ms = s.sem_ms * 1.96;
+    // Coefficient of variation
+    s.cv_pct = (s.mean_ms > 0) ? (s.stddev_ms / s.mean_ms * 100.0) : 0.0;
     return s;
   }
 };
@@ -576,6 +591,8 @@ int run(Options &options, const EnvInfo &env)
     result.max_runtime_ms    = stats.max_ms;
     result.median_runtime_ms = stats.median_ms;
     result.stddev_ms         = stats.stddev_ms;
+    result.ci95_ms           = stats.ci95_ms;
+    result.cv_pct            = stats.cv_pct;
     result.gflops            = options.gflops(result.avg_runtime_ms / 1000.0);
 
     double tflops   = result.gflops / 1000.0;
@@ -600,7 +617,9 @@ int run(Options &options, const EnvInfo &env)
       j << "    \"min\": " << result.min_runtime_ms << "," << std::endl;
       j << "    \"max\": " << result.max_runtime_ms << "," << std::endl;
       j << "    \"median\": " << result.median_runtime_ms << "," << std::endl;
-      j << "    \"stddev\": " << result.stddev_ms << std::endl;
+      j << "    \"stddev\": " << result.stddev_ms << "," << std::endl;
+      j << "    \"ci95\": " << result.ci95_ms << "," << std::endl;
+      j << "    \"cv_pct\": " << result.cv_pct << std::endl;
       j << "  }," << std::endl;
       j << std::setprecision(1);
       j << "  \"gflops\": " << result.gflops << "," << std::endl;
@@ -624,7 +643,9 @@ int run(Options &options, const EnvInfo &env)
       std::cout << "  Avg runtime: " << result.avg_runtime_ms << " ms"
                 << " (min: " << result.min_runtime_ms
                 << ", max: " << result.max_runtime_ms
-                << ", stddev: " << result.stddev_ms << ")" << std::endl;
+                << ", stddev: " << result.stddev_ms
+                << ", 95% CI: " << result.ci95_ms
+                << ", CV: " << result.cv_pct << "%)" << std::endl;
       std::cout << std::setprecision(1);
       std::cout << "  GFLOPS: " << result.gflops << std::endl;
       std::cout << "  TFLOPS: " << std::setprecision(3) << tflops
