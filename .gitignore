@@ -1,9 +1,18 @@
-# Compiled binaries
+# Compiled binaries (exact names)
 bench_nvfp4_fp4
 bench_nvfp4_fp4_bf16
-bench_bf16
+bench_bf16_cutlass
+bench_nvfp4_cutlass
+
+# Custom tile compiled binaries (dot-separated tile config)
 bench_nvfp4_fp4.*
-bench_bf16.*
+!bench_nvfp4_fp4.cu
+bench_nvfp4_fp4_bf16.*
+!bench_nvfp4_fp4_bf16.cu
+bench_bf16_cutlass.*
+!bench_bf16_cutlass.cu
+bench_nvfp4_cutlass.*
+!bench_nvfp4_cutlass.cu
 *.bak
 
 # Results (raw data only; metadata files tracked)
