@@ -729,6 +729,17 @@ int run(Options &options, const EnvInfo &env)
       j << "  \"m\": " << options.m << "," << std::endl;
       j << "  \"n\": " << options.n << "," << std::endl;
       j << "  \"k\": " << options.k << "," << std::endl;
+      j << "  \"tile_mnk\": \""
+        << TILE_M << "x" << TILE_N << "x" << TILE_K << "\"," << std::endl;
+      j << "  \"cluster_mnk\": \""
+        << TILE_CLUSTERM << "x" << TILE_CLUSTERN << "x" << TILE_CLUSTERZ << "\"," << std::endl;
+      j << "  \"input_sf\": " << TILE_INPUTSF << "," << std::endl;
+      j << "  \"output_sf\": " << TILE_OUTPUTSF << "," << std::endl;
+      j << "  \"options\": {" << std::endl;
+      j << "    \"iterations\": " << options.iterations << "," << std::endl;
+      j << "    \"warmup\": " << options.warmup << "," << std::endl;
+      j << "    \"seed\": " << options.seed << std::endl;
+      j << "  }," << std::endl;
       j << std::setprecision(3);
       j << "  \"runtime_ms\": {" << std::endl;
       j << "    \"mean\": " << result.avg_runtime_ms << "," << std::endl;

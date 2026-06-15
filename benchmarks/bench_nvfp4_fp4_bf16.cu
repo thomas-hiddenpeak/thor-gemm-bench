@@ -253,6 +253,12 @@ struct BenchResult {
     double gflops;
     double tflops;
     double eff;
+    double runtime_mean_ms;
+    double runtime_min_ms;
+    double runtime_max_ms;
+    double runtime_stddev_ms;
+    double runtime_ci95_ms;
+    double runtime_cv_pct;
     bool valid;
 };
 
@@ -403,7 +409,9 @@ BenchResult bench_shape(int M, int N, int K, double peak_tflops, const Options &
            gflops, tflops, eff, passed ? "✓ valid" : "✗ INVALID");
     fflush(stdout);
 
-    return {passed ? gflops : 0, passed ? tflops : 0, passed ? eff : 0, passed};
+    return {passed ? gflops : 0, passed ? tflops : 0, passed ? eff : 0,
+            stats.mean_ms, stats.min_ms, stats.max_ms, stats.stddev_ms, stats.ci95_ms, stats.cv_pct,
+            passed};
 }
 
 int main(int argc, char* argv[]) {
@@ -444,12 +452,16 @@ int main(int argc, char* argv[]) {
         auto result = bench_shape(options.m, options.n, options.k, peak_tflops, options);
         if (options.json_output) {
             printf("{\"benchmark\":\"nvfp4_fp4_bf16\",\"m\":%d,\"n\":%d,\"k\":%d,"
-                   "\"gflops\":%.0f,\"tflops\":%.1f,\"efficiency\":%.1f,"
+                   "\"runtime_ms\":{\"mean\":%.3f,\"min\":%.3f,\"max\":%.3f,"
+                   "\"stddev\":%.4f,\"ci95\":%.4f,\"cv_pct\":%.2f},"
+                   "\"gflops\":%.0f,\"tflops\":%.1f,\"efficiency\":%.1f,\"peak_pct\":%.1f,"
                    "\"correctness\":\"%s\""
                    ",\"toolchain\":{\"cuda_version\":%d,\"cutlass_commit\":\"%s\"}"
                    "}\n",
                    options.m, options.n, options.k,
-                   result.gflops, result.tflops, result.eff,
+                   result.runtime_mean_ms, result.runtime_min_ms, result.runtime_max_ms,
+                   result.runtime_stddev_ms, result.runtime_ci95_ms, result.runtime_cv_pct,
+                   result.gflops, result.tflops, result.eff, result.eff,
                    result.valid ? "passed" : "failed",
                    cuda_ver, cutlass_commit.c_str());
         }

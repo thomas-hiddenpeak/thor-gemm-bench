@@ -305,6 +305,8 @@ struct EnvInfo {
   std::string gpu_name;
   int sm_count;
   double clock_mhz;
+  int cuda_version;          // e.g. 13033 for CUDA 13.3
+  std::string cutlass_commit;
 
   static EnvInfo probe() {
     EnvInfo info{};
@@ -314,6 +316,13 @@ struct EnvInfo {
     cudaGetDeviceProperties(&props, dev);
     info.gpu_name = props.name;
     info.sm_count = props.multiProcessorCount;
+    int cv; cudaRuntimeGetVersion(&cv); info.cuda_version = cv;
+    info.cutlass_commit =
+  #ifdef CUTLASS_COMMIT
+    CUTLASS_COMMIT;
+  #else
+    "unknown";
+  #endif
     // Try reading clock from sysfs (devfreq)
     const char *sysfs_paths[] = {
       "/sys/devices/13a00000.gpu/devfreq/13a00000.gpu/cur_freq",
@@ -634,6 +643,15 @@ int run(Options &options, const EnvInfo &env)
       j << "    \"sm_count\": " << env.sm_count << "," << std::endl;
       j << std::setprecision(0);
       j << "    \"clock_mhz\": " << env.clock_mhz << std::endl;
+      j << "  }," << std::endl;
+      j << "  \"options\": {" << std::endl;
+      j << "    \"iterations\": " << options.iterations << "," << std::endl;
+      j << "    \"warmup\": " << options.warmup << "," << std::endl;
+      j << "    \"seed\": " << options.seed << std::endl;
+      j << "  }," << std::endl;
+      j << "  \"toolchain\": {" << std::endl;
+      j << "    \"cuda_version\": " << env.cuda_version << "," << std::endl;
+      j << "    \"cutlass_commit\": \"" << env.cutlass_commit << "\"" << std::endl;
       j << "  }" << std::endl;
       j << "}" << std::endl;
       std::cout << j.str();
@@ -688,6 +706,8 @@ int main(int argc, char const **args) {
   std::cout << "GPU: " << env.gpu_name
             << " | SMs: " << env.sm_count
             << " | Clock: " << std::fixed << std::setprecision(0) << env.clock_mhz << " MHz"
+            << " | CUDA: " << (env.cuda_version / 1000) << "." << ((env.cuda_version % 1000) / 10)
+            << " | CUTLASS: " << env.cutlass_commit
             << " | Peak: 1032 TF (dense @ 1575 MHz)" << std::endl;
 
   //
