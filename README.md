@@ -1,6 +1,6 @@
-# CUDA Tile Benchmark — FP4 & BF16 GEMM on Blackwell (SM110)
+# Thor GEMM Bench — FP4 & BF16 GEMM on Blackwell (SM110)
 
-[![CI](https://github.com/thomas-hiddenpeak/cuda-tile-benchmark/actions/workflows/benchmark-ci.yml/badge.svg)](https://github.com/thomas-hiddenpeak/cuda-tile-benchmark/actions/workflows/benchmark-ci.yml)
+[![CI](https://github.com/thomas-hiddenpeak/thor-gemm-bench/actions/workflows/benchmark-ci.yml/badge.svg)](https://github.com/thomas-hiddenpeak/thor-gemm-bench/actions/workflows/benchmark-ci.yml)
 
 NVFP4 and BF16 Block-Scaled GEMM tuning on NVIDIA Jetson AGX Thor (sm_110a) using CUTLASS. Searches over tile shape, cluster layout, SF vector size, and problem size.
 
@@ -49,7 +49,7 @@ $ vi env.local.mk   # modify NVCC / CUTLASS_DIR
 ### Building
 
 ```bash
-cd cuda_tile_benchmark
+cd thor-gemm-bench
 
 # Build all benchmarks
 make
